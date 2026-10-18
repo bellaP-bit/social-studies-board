@@ -1,0 +1,1121 @@
+Here is the updated code!What was updated:No Scrollbar for Trivia: Adjusted the trivia card layout so that the question and all four choices fit comfortably within the scroll area without needing to scroll.Interactive Color Feedback:When a student picks an option, the button immediately highlights in Green (#2e7d32) if it is Correct.   If they pick an incorrect option, their chosen button turns Red (#c62828) while the right answer highlights in Green so they can learn from their choice.   Score Summary: Retained the total score overview showing how many answers each student got right versus wrong in the teacher score report.   HTML<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Studies Month Digital Bulletin Board</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #2a1f18;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #000000;
+}
+
+.bg-picker-bar {
+  background: #1e1510;
+  color: #d1b17a;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  border-bottom: 1px solid #423023;
+}
+
+.bg-picker-bar input[type="file"] {
+  font-size: 12px;
+  color: #d1b17a;
+}
+
+.board {
+  position: relative;
+  width: 100%;
+  max-width: 1648px;
+  aspect-ratio: 1648 / 912;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: #ead9bb;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.menu-area {
+  position: absolute;
+  z-index: 20;
+  top: 2.5%;
+  right: 2.5%;
+}
+
+.menu-toggle {
+  border: 2px solid #8c6539;
+  border-radius: 10px;
+  background: #fff0c7;
+  padding: 6px 14px;
+  font-size: 22px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  font-weight: bold;
+  color: #000000;
+  cursor: pointer;
+}
+
+.menu-toggle:hover {
+  background: #ffe39a;
+}
+
+.menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 230px;
+  margin-top: 7px;
+  padding: 8px;
+  border: 2px solid #987044;
+  border-radius: 10px;
+  background: #fff3d7;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+
+.menu.open {
+  display: block;
+}
+
+.menu button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  text-align: left;
+  background: transparent;
+  color: #000000;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+.menu button:hover {
+  background: #ead4a8;
+}
+
+.panels {
+  position: absolute;
+  left: 41.8%;
+  top: 55.5%;
+  width: 52.2%;
+  height: 38%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.2%;
+  z-index: 5;
+}
+
+.panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  text-align: center;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(12px, 1.2vw, 18px);
+  font-weight: 900;
+  color: #000000;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.panel-content {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: clamp(8px, 0.82vw, 12px);
+  line-height: 1.35;
+  scrollbar-width: thin;
+  scrollbar-color: #8c6333 transparent;
+}
+
+/* Specific non-scrolling overflow fit for Trivia Column */
+#trivia.panel-content {
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.post {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  background: rgba(255, 246, 225, 0.65);
+  border: 1px solid rgba(160, 120, 60, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.post h3 {
+  margin: 0 0 3px;
+  color: #000000;
+  font-size: 1.05em;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+}
+
+.post p {
+  margin: 4px 0;
+  color: #000000;
+}
+
+.meta {
+  color: #000000;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(184, 134, 11, 0.25);
+  border: 1px solid rgba(139, 90, 0, 0.4);
+  color: #000000;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+/* Trivia Option Buttons with Feedback States */
+.quiz-option {
+  display: block;
+  width: 100%;
+  margin: 3px 0;
+  padding: 4px 6px;
+  border: 1px solid rgba(80, 50, 10, 0.3);
+  border-radius: 5px;
+  background: rgba(255, 250, 235, 0.85);
+  color: #000000;
+  text-align: left;
+  font-size: 0.9em;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.quiz-option:hover:not(:disabled) {
+  background: rgba(245, 226, 185, 0.95);
+  border-color: rgba(80, 50, 10, 0.6);
+}
+
+.quiz-option.correct-choice {
+  background-color: #2e7d32 !important;
+  color: #ffffff !important;
+  border-color: #1b5e20 !important;
+  font-weight: bold;
+}
+
+.quiz-option.wrong-choice {
+  background-color: #c62828 !important;
+  color: #ffffff !important;
+  border-color: #8e0000 !important;
+  font-weight: bold;
+}
+
+.post-actions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.primary, .secondary, .danger {
+  padding: 5px 8px;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.primary { background: #315f37; color: white; }
+.secondary { background: #d3b482; color: #000000; }
+.danger { background: #a43b31; color: white; }
+
+.empty {
+  padding: 10px;
+  text-align: center;
+  color: #000000;
+  font-style: italic;
+  font-size: 0.95em;
+}
+
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  background: rgba(20, 12, 6, 0.8);
+}
+
+.modal-backdrop.show {
+  display: flex;
+}
+
+.modal {
+  width: min(600px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  border: 3px solid #8c6333;
+  border-radius: 12px;
+  background: #fff5df;
+  color: #000000;
+}
+
+.modal h2 {
+  margin-top: 0;
+  font-family: Georgia, serif;
+  color: #000000;
+}
+
+.modal label {
+  display: block;
+  margin: 10px 0 4px;
+  font-weight: bold;
+  font-size: 13px;
+  color: #000000;
+}
+
+.modal input, .modal textarea, .modal select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #c5a477;
+  border-radius: 6px;
+  background: #fffdf7;
+  color: #000000;
+}
+
+.modal textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.adjust-box {
+  background: #ebd8b7;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #b89360;
+  margin-bottom: 12px;
+  color: #000000;
+}
+
+.adjust-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.adjust-row input[type="range"] {
+  width: 60%;
+}
+
+.report-row {
+  padding: 8px 0;
+  border-bottom: 1px solid #d9c29a;
+  font-size: 13px;
+  color: #000000;
+}
+
+.trivia-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-picker-bar">
+  <div>
+    <strong>Bulletin Layout Setup:</strong> Choose background image file (<code>bulletin-background.png</code> or <code>mydesign.png</code>)
+  </div>
+  <input type="file" id="bgUploader" accept="image/*">
+</div>
+
+<main class="board" id="mainBoard">
+
+  <div class="menu-area">
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu">⋯</button>
+
+    <nav class="menu" id="menu">
+      <button onclick="adminLogin()">🔐 Admin / Edit Board</button>
+      <button onclick="openAdjuster()">📐 Adjust Scroll Positioning</button>
+      <button onclick="learnerMode()">🎒 Learner Mode</button>
+      <button onclick="showVisitors()">👥 Visitor Log</button>
+      <button onclick="showResults()">🧠 Trivia Scores</button>
+      <button onclick="showAbout()">ℹ️ About This Board</button>
+    </nav>
+  </div>
+
+  <section class="panels" id="panelGrid">
+
+    <article class="panel">
+      <div class="section-header">ANNOUNCEMENTS</div>
+      <div id="announcements" class="panel-content"></div>
+    </article>
+
+    <article class="panel">
+      <div class="section-header">WEEKLY ACTIVITY</div>
+      <div id="activities" class="panel-content"></div>
+    </article>
+
+    <article class="panel">
+      <div class="section-header">TRIVIA</div>
+      <div id="trivia" class="panel-content"></div>
+    </article>
+
+  </section>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <section class="modal" role="dialog" aria-modal="true">
+    <div id="modalBody"></div>
+  </section>
+</div>
+
+<script>
+const DATA_KEY = "socialStudiesBoardData";
+const VISIT_KEY = "socialStudiesBoardVisits";
+const SCORE_KEY = "socialStudiesBoardScores";
+const BG_KEY = "socialStudiesBoardBg";
+const POS_KEY = "socialStudiesBoardPos";
+
+const defaultData = {
+  announcements: [{
+    id: 1,
+    title: "Welcome to Social Studies Month!",
+    date: "2026-10-18",
+    priority: "Important",
+    body: "Let us celebrate our Filipino identity by learning about our culture, history, and national heritage. Check this board each week for new updates."
+  }],
+
+  activities: [{
+    id: 2,
+    title: "Culture Detective: Our Local Heritage",
+    week: "Week 1",
+    due: "2026-10-25",
+    body: "Interview a family member about a local tradition, food, place, or story. Write 5–7 sentences about what you learned and how it connects to Filipino culture.",
+    theme: "Pagpapaunlad sa ating Kultura: Pagbabalik Tanaw sa Historya"
+  }],
+
+  trivia: [
+    {
+      id: 3,
+      title: "Weekly History Trivia #1",
+      week: "Question 1/5",
+      question: "What do the three stars on the Philippine flag represent?",
+      options: [
+        "Luzon, Visayas, and Mindanao",
+        "Three Philippine presidents",
+        "Three historical battles",
+        "Three national languages"
+      ],
+      answer: 0,
+      explanation: "The three stars represent the three primary island groups: Luzon, Visayas, and Mindanao."
+    },
+    {
+      id: 4,
+      title: "Weekly History Trivia #2",
+      week: "Question 2/5",
+      question: "Who is recognized as the National Hero of the Philippines?",
+      options: [
+        "Andres Bonifacio",
+        "Dr. Jose Rizal",
+        "Apolinario Mabini",
+        "Emilio Aguinaldo"
+      ],
+      answer: 1,
+      explanation: "Dr. Jose Rizal is honored as the National Hero of the Philippines."
+    },
+    {
+      id: 5,
+      title: "Weekly History Trivia #3",
+      week: "Question 3/5",
+      question: "What is considered the oldest city in the Philippines?",
+      options: [
+        "Manila",
+        "Davao City",
+        "Cebu City",
+        "Iloilo City"
+      ],
+      answer: 2,
+      explanation: "Cebu City is the oldest city in the Philippines, established by Miguel López de Legazpi in 1565."
+    },
+    {
+      id: 6,
+      title: "Weekly History Trivia #4",
+      week: "Question 4/5",
+      question: "Which Philippine epic poem tells the heroic deeds of Lam-ang?",
+      options: [
+        "Biag ni Lam-ang",
+        "Florante at Laura",
+        "Ibong Adarna",
+        "Noli Me Tángere"
+      ],
+      answer: 0,
+      explanation: "Biag ni Lam-ang is a famous Ilocano epic poem."
+    },
+    {
+      id: 7,
+      title: "Weekly History Trivia #5",
+      week: "Question 5/5",
+      question: "On which date is Philippine Independence Day celebrated?",
+      options: [
+        "July 4",
+        "June 12",
+        "August 30",
+        "December 30"
+      ],
+      answer: 1,
+      explanation: "June 12 marks Philippine Independence Day, declared in Kawit, Cavite in 1898."
+    }
+  ]
+};
+
+let currentTriviaIndex = 0;
+
+const bgUploader = document.getElementById("bgUploader");
+const mainBoard = document.getElementById("mainBoard");
+
+function loadBg() {
+  const savedBg = localStorage.getItem(BG_KEY);
+  if (savedBg) {
+    mainBoard.style.backgroundImage = `url('${savedBg}')`;
+  } else {
+    mainBoard.style.backgroundImage = `url('bulletin-background.png'), url('mydesign.png')`;
+  }
+}
+
+bgUploader.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const dataUrl = evt.target.result;
+      mainBoard.style.backgroundImage = `url('${dataUrl}')`;
+      localStorage.setItem(BG_KEY, dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+const panelGrid = document.getElementById("panelGrid");
+const defaultPos = { top: 55.5, left: 41.8, width: 52.2, height: 38.0, gap: 2.2 };
+
+function loadPos() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(POS_KEY));
+    const p = saved || defaultPos;
+    applyPos(p);
+    return p;
+  } catch(e) {
+    applyPos(defaultPos);
+    return defaultPos;
+  }
+}
+
+function applyPos(p) {
+  panelGrid.style.top = p.top + "%";
+  panelGrid.style.left = p.left + "%";
+  panelGrid.style.width = p.width + "%";
+  panelGrid.style.height = p.height + "%";
+  panelGrid.style.gap = p.gap + "%";
+}
+
+let currentPos = loadPos();
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(DATA_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        announcements: parsed.announcements || [],
+        activities: parsed.activities || [],
+        trivia: parsed.trivia || []
+      };
+    }
+  } catch (error) {
+    console.error("Unable to load saved data", error);
+  }
+  return JSON.parse(JSON.stringify(defaultData));
+}
+
+let data = loadData();
+
+function saveData() {
+  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+}
+
+function readStorage(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeStorage(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function escapeHTML(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function isAdmin() {
+  return sessionStorage.getItem("ssBoardAdmin") === "yes";
+}
+
+function openModal(title, content, buttons = "") {
+  document.getElementById("modalBody").innerHTML = `
+    <h2>${escapeHTML(title)}</h2>
+    <div>${content}</div>
+    <div class="modal-actions">
+      ${buttons}
+      <button class="secondary" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  document.getElementById("modalBackdrop").classList.add("show");
+}
+
+function closeModal() {
+  document.getElementById("modalBackdrop").classList.remove("show");
+}
+
+document.getElementById("menuToggle").addEventListener("click", () => {
+  document.getElementById("menu").classList.toggle("open");
+});
+
+document.addEventListener("click", event => {
+  if (!event.target.closest(".menu-area")) {
+    document.getElementById("menu").classList.remove("open");
+  }
+});
+
+document.getElementById("modalBackdrop").addEventListener("click", event => {
+  if (event.target.id === "modalBackdrop") closeModal();
+});
+
+function renderAnnouncements() {
+  const container = document.getElementById("announcements");
+  if (!data.announcements.length) {
+    container.innerHTML = '<div class="empty">No announcements yet.</div>';
+    return;
+  }
+
+  container.innerHTML = data.announcements.map(item => `
+    <div class="post">
+      <h3>${escapeHTML(item.title)}</h3>
+      <div class="meta">
+        ${escapeHTML(item.date || "")}
+        ${item.priority ? ` • <span class="tag">${escapeHTML(item.priority)}</span>` : ""}
+      </div>
+      <p>${escapeHTML(item.body).replace(/\n/g, "<br>")}</p>
+      ${isAdmin() ? `
+        <div class="post-actions">
+          <button class="secondary" onclick="editItem('announcements',${item.id})">Edit</button>
+          <button class="danger" onclick="deleteItem('announcements',${item.id})">Delete</button>
+        </div>` : ""}
+    </div>
+  `).join("");
+}
+
+function renderActivities() {
+  const container = document.getElementById("activities");
+  if (!data.activities.length) {
+    container.innerHTML = '<div class="empty">No weekly activities yet.</div>';
+    return;
+  }
+
+  container.innerHTML = data.activities.map(item => `
+    <div class="post">
+      <span class="tag">${escapeHTML(item.week || "Weekly")}</span>
+      <h3>${escapeHTML(item.title)}</h3>
+      <div class="meta">
+        ${item.due ? "Due: " + escapeHTML(item.due) : "Check with your teacher for due date"}
+      </div>
+      <p>${escapeHTML(item.body).replace(/\n/g, "<br>")}</p>
+      ${item.theme ? `<p><b>Theme:</b> ${escapeHTML(item.theme)}</p>` : ""}
+      ${isAdmin() ? `
+        <div class="post-actions">
+          <button class="secondary" onclick="editItem('activities',${item.id})">Edit</button>
+          <button class="danger" onclick="deleteItem('activities',${item.id})">Delete</button>
+        </div>` : ""}
+    </div>
+  `).join("");
+}
+
+function renderTrivia() {
+  const container = document.getElementById("trivia");
+  if (!data.trivia.length) {
+    container.innerHTML = '<div class="empty">New trivia coming soon!</div>';
+    return;
+  }
+
+  if (currentTriviaIndex >= data.trivia.length) {
+    currentTriviaIndex = 0;
+  }
+
+  const item = data.trivia[currentTriviaIndex];
+
+  container.innerHTML = `
+    <div class="post" id="triviaCard_${item.id}">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="tag">${escapeHTML(item.week || `Question ${currentTriviaIndex+1}/${data.trivia.length}`)}</span>
+        <span class="meta">${currentTriviaIndex + 1} of ${data.trivia.length}</span>
+      </div>
+      <h3 style="margin-top:4px;">${escapeHTML(item.title)}</h3>
+      <p style="font-size:0.95em; margin: 4px 0;"><b>${escapeHTML(item.question)}</b></p>
+
+      <div id="optionsGroup_${item.id}">
+        ${item.options.map((option, index) => `
+          <button class="quiz-option" id="btn_${item.id}_${index}" onclick="answerTrivia(${item.id},${index})">
+            ${String.fromCharCode(65 + index)}.${escapeHTML(option)}
+          </button>
+        `).join("")}
+      </div>
+
+      <div class="trivia-nav">
+        <button class="secondary" onclick="prevTrivia()" ${currentTriviaIndex === 0 ? "disabled" : ""}>◀ Prev</button>
+        <button class="secondary" onclick="nextTrivia()" ${currentTriviaIndex === data.trivia.length - 1 ? "disabled" : ""}>Next ▶</button>
+      </div>
+
+      ${isAdmin() ? `
+        <div class="post-actions">
+          <button class="secondary" onclick="editItem('trivia',${item.id})">Edit</button>
+          <button class="danger" onclick="deleteItem('trivia',${item.id})">Delete</button>
+        </div>` : ""}
+    </div>
+  `;
+}
+
+function prevTrivia() {
+  if (currentTriviaIndex > 0) {
+    currentTriviaIndex--;
+    renderTrivia();
+  }
+}
+
+function nextTrivia() {
+  if (currentTriviaIndex < data.trivia.length - 1) {
+    currentTriviaIndex++;
+    renderTrivia();
+  }
+}
+
+function renderBoard() {
+  renderAnnouncements();
+  renderActivities();
+  renderTrivia();
+}
+
+function openAdjuster() {
+  document.getElementById("menu").classList.remove("open");
+  openModal("📐 Adjust Scroll Alignment", `
+    <p>Use these controls to align the text perfectly inside your background scrolls:</p>
+    <div class="adjust-box">
+      <div class="adjust-row">
+        <span>Top Shift (%):</span>
+        <input type="range" min="30" max="75" step="0.1" value="${currentPos.top}" oninput="updatePos('top', this.value)">
+      </div>
+      <div class="adjust-row">
+        <span>Left Shift (%):</span>
+        <input type="range" min="20" max="60" step="0.1" value="${currentPos.left}" oninput="updatePos('left', this.value)">
+      </div>
+      <div class="adjust-row">
+        <span>Width (%):</span>
+        <input type="range" min="30" max="70" step="0.1" value="${currentPos.width}" oninput="updatePos('width', this.value)">
+      </div>
+      <div class="adjust-row">
+        <span>Height (%):</span>
+        <input type="range" min="20" max="55" step="0.1" value="${currentPos.height}" oninput="updatePos('height', this.value)">
+      </div>
+      <div class="adjust-row">
+        <span>Column Gap (%):</span>
+        <input type="range" min="0" max="8" step="0.1" value="${currentPos.gap}" oninput="updatePos('gap', this.value)">
+      </div>
+    </div>
+  `, `
+    <button class="primary" onclick="resetPos()">Reset Defaults</button>
+  `);
+}
+
+function updatePos(key, val) {
+  currentPos[key] = parseFloat(val);
+  applyPos(currentPos);
+  localStorage.setItem(POS_KEY, JSON.stringify(currentPos));
+}
+
+function resetPos() {
+  currentPos = { ...defaultPos };
+  applyPos(currentPos);
+  localStorage.setItem(POS_KEY, JSON.stringify(currentPos));
+  openAdjuster();
+}
+
+function adminLogin() {
+  document.getElementById("menu").classList.remove("open");
+  openModal("Admin Login", `
+    <p>Enter the password to edit board items.</p>
+    <p><b>Demo Password:</b> history123</p>
+    <label for="adminPassword">Password</label>
+    <input id="adminPassword" type="password" placeholder="Enter password">
+  `, `
+    <button class="primary" onclick="checkAdmin()">Log In</button>
+  `);
+}
+
+function checkAdmin() {
+  const pwd = document.getElementById("adminPassword").value;
+  if (pwd !== "history123") {
+    alert("Incorrect password.");
+    return;
+  }
+  sessionStorage.setItem("ssBoardAdmin", "yes");
+  closeModal();
+  renderBoard();
+  showAdminPanel();
+}
+
+function showAdminPanel() {
+  openModal("Manage Bulletin Board", `
+    <p>Select an action below:</p>
+  `, `
+    <button class="primary" onclick="addItem('announcements')">Add Announcement</button>
+    <button class="primary" onclick="addItem('activities')">Add Activity</button>
+    <button class="primary" onclick="addItem('trivia')">Add Trivia Question</button>
+    <button class="secondary" onclick="learnerMode()">Learner Mode</button>
+  `);
+}
+
+function learnerMode() {
+  sessionStorage.removeItem("ssBoardAdmin");
+  document.getElementById("menu").classList.remove("open");
+  closeModal();
+  renderBoard();
+}
+
+function addItem(type) {
+  closeModal();
+  editItem(type, null);
+}
+
+function editItem(type, id) {
+  const item = id ? data[type].find(entry => entry.id === id) : null;
+  let fields = "";
+
+  if (type === "announcements") {
+    fields = `
+      <label>Title</label>
+      <input id="fTitle" value="${escapeHTML(item?.title || "")}">
+      <label>Date</label>
+      <input id="fDate" type="date" value="${escapeHTML(item?.date || new Date().toISOString().slice(0,10))}">
+      <label>Priority</label>
+      <select id="fPriority">
+        <option ${item?.priority === "General" ? "selected" : ""}>General</option>
+        <option ${!item || item.priority === "Important" ? "selected" : ""}>Important</option>
+        <option ${item?.priority === "Reminder" ? "selected" : ""}>Reminder</option>
+      </select>
+      <label>Content</label>
+      <textarea id="fBody">${escapeHTML(item?.body || "")}</textarea>
+    `;
+  }
+
+  if (type === "activities") {
+    fields = `
+      <label>Title</label>
+      <input id="fTitle" value="${escapeHTML(item?.title || "")}">
+      <label>Week</label>
+      <input id="fWeek" value="${escapeHTML(item?.week || "Week 1")}">
+      <label>Due Date</label>
+      <input id="fDue" type="date" value="${escapeHTML(item?.due || "")}">
+      <label>Instructions</label>
+      <textarea id="fBody">${escapeHTML(item?.body || "")}</textarea>
+      <label>Theme</label>
+      <input id="fTheme" value="${escapeHTML(item?.theme || "")}">
+    `;
+  }
+
+  if (type === "trivia") {
+    fields = `
+      <label>Title</label>
+      <input id="fTitle" value="${escapeHTML(item?.title || "Weekly History Trivia")}">
+      <label>Question Tag / Label</label>
+      <input id="fWeek" value="${escapeHTML(item?.week || "Question " + (data.trivia.length + 1))}">
+      <label>Question</label>
+      <textarea id="fQuestion">${escapeHTML(item?.question || "")}</textarea>
+      ${[0,1,2,3].map(i => `
+        <label>Option ${String.fromCharCode(65+i)}</label>
+        <input id="fOpt${i}" value="${escapeHTML(item?.options?.[i] || "")}">
+      `).join("")}
+      <label>Correct Answer</label>
+      <select id="fAnswer">
+        ${[0,1,2,3].map(i => `
+          <option value="${i}" ${(item?.answer ?? 0) === i ? "selected" : ""}>Option ${String.fromCharCode(65+i)}</option>
+        `).join("")}
+      </select>
+      <label>Explanation</label>
+      <textarea id="fExplanation">${escapeHTML(item?.explanation || "")}</textarea>
+    `;
+  }
+
+  openModal((item ? "Edit " : "Add ") + type.slice(0, -1), fields, `
+    <button class="primary" onclick="saveItem('${type}',${id ?? "null"})">Save Post</button>
+  `);
+}
+
+function saveItem(type, id) {
+  const oldItem = id ? data[type].find(entry => entry.id === id) : null;
+  const title = document.getElementById("fTitle").value.trim();
+  if (!title) { alert("Title is required"); return; }
+
+  const item = { id: id || Date.now(), title };
+
+  if (type === "announcements") {
+    item.date = document.getElementById("fDate").value;
+    item.priority = document.getElementById("fPriority").value;
+    item.body = document.getElementById("fBody").value.trim();
+  } else if (type === "activities") {
+    item.week = document.getElementById("fWeek").value.trim();
+    item.due = document.getElementById("fDue").value;
+    item.body = document.getElementById("fBody").value.trim();
+    item.theme = document.getElementById("fTheme").value.trim();
+  } else if (type === "trivia") {
+    item.week = document.getElementById("fWeek").value.trim();
+    item.question = document.getElementById("fQuestion").value.trim();
+    item.options = [0,1,2,3].map(i => document.getElementById("fOpt" + i).value.trim());
+    item.answer = Number(document.getElementById("fAnswer").value);
+    item.explanation = document.getElementById("fExplanation").value.trim();
+  }
+
+  if (oldItem) {
+    Object.assign(oldItem, item);
+  } else {
+    data[type].unshift(item);
+  }
+
+  saveData();
+  closeModal();
+  renderBoard();
+  if (isAdmin()) showAdminPanel();
+}
+
+function deleteItem(type, id) {
+  if (!confirm("Are you sure you want to delete this item?")) return;
+  data[type] = data[type].filter(item => item.id !== id);
+  saveData();
+  renderBoard();
+}
+
+function answerTrivia(id, index) {
+  const question = data.trivia.find(item => item.id === id);
+  if (!question) return;
+
+  if (!isAdmin() && !sessionStorage.getItem("ssBoardLearner")) {
+    openModal("Learner Info", `
+      <p>Enter your details before submitting:</p>
+      <label>COMPLETE NAME</label>
+      <input id="learnerName" placeholder="Enter complete name">
+      
+      <label>GRADE LEVEL</label>
+      <input id="learnerGrade" placeholder="e.g. Grade 12">
+      
+      <label>SECTION</label>
+      <input id="learnerSection" placeholder="e.g. Alpha">
+
+      <label>STRAND</label>
+      <input id="learnerStrand" placeholder="e.g. HUMSS / TVL-Maritime">
+    `, `
+      <button class="primary" onclick="startTrivia(${id},${index})">Submit Answer</button>
+    `);
+    return;
+  }
+  submitTrivia(id, index);
+}
+
+function startTrivia(id, index) {
+  const name = document.getElementById("learnerName").value.trim();
+  const grade = document.getElementById("learnerGrade").value.trim();
+  const section = document.getElementById("learnerSection").value.trim();
+  const strand = document.getElementById("learnerStrand").value.trim();
+
+  if (!name || !grade || !section || !strand) { 
+    alert("Please fill in Complete Name, Grade Level, Section, and Strand."); 
+    return; 
+  }
+
+  const fullLearnerInfo = `${name} | ${grade} - ${section} (${strand})`;
+  sessionStorage.setItem("ssBoardLearner", fullLearnerInfo);
+
+  const visits = readStorage(VISIT_KEY);
+  visits.push({ name: fullLearnerInfo, date: new Date().toLocaleString() });
+  writeStorage(VISIT_KEY, visits);
+
+  submitTrivia(id, index);
+}
+
+function submitTrivia(id, index) {
+  const question = data.trivia.find(item => item.id === id);
+  if (!question) return;
+
+  const name = sessionStorage.getItem("ssBoardLearner") || "Admin";
+  const correct = index === question.answer;
+  const scores = readStorage(SCORE_KEY);
+
+  // Apply Green / Red color feedback to buttons immediately
+  question.options.forEach((_, optIdx) => {
+    const btn = document.getElementById(`btn_${id}_${optIdx}`);
+    if (btn) {
+      btn.disabled = true;
+      if (optIdx === question.answer) {
+        btn.classList.add("correct-choice");
+      } else if (optIdx === index && !correct) {
+        btn.classList.add("wrong-choice");
+      }
+    }
+  });
+
+  scores.push({
+    name,
+    question: question.question,
+    selected: question.options[index],
+    correctAnswer: question.options[question.answer],
+    correct,
+    date: new Date().toLocaleString()
+  });
+
+  writeStorage(SCORE_KEY, scores);
+
+  setTimeout(() => {
+    openModal(correct ? "🎉 Correct!" : "❌ Incorrect", `
+      <p style="color:${correct ? '#2e7d32' : '#c62828'}; font-weight:bold; font-size:1.1em;">
+        ${correct ? "Great job! You selected the correct answer." : "That choice was incorrect."}
+      </p>
+      <p><b>Your answer:</b> ${escapeHTML(question.options[index])}</p>
+      <p><b>Correct answer:</b> ${escapeHTML(question.options[question.answer])}</p>
+      <p>${escapeHTML(question.explanation || "")}</p>
+    `);
+  }, 300);
+}
+
+function showVisitors() {
+  document.getElementById("menu").classList.remove("open");
+  const visits = readStorage(VISIT_KEY);
+  const content = visits.length
+    ? visits.slice().reverse().map(v => `<div class="report-row"><b>${escapeHTML(v.name)}</b><br><span class="meta">${escapeHTML(v.date)}</span></div>`).join("")
+    : "<p>No visitors recorded yet.</p>";
+
+  openModal("Visitor Log", content, `<button class="danger" onclick="clearVisitors()">Clear Log</button>`);
+}
+
+function clearVisitors() {
+  if (!confirm("Clear visitor log?")) return;
+  writeStorage(VISIT_KEY, []);
+  showVisitors();
+}
+
+function showResults() {
+  document.getElementById("menu").classList.remove("open");
+  const scores = readStorage(SCORE_KEY);
+  const correct = scores.filter(s => s.correct).length;
+  const incorrect = scores.length - correct;
+
+  const content = scores.length
+    ? scores.slice().reverse().map(s => `
+        <div class="report-row">
+          <b>${escapeHTML(s.name)}</b> — 
+          <span class="tag" style="background:${s.correct ? '#2e7d3222' : '#c6282822'}; border-color:${s.correct ? '#2e7d32' : '#c62828'}; color:${s.correct ? '#2e7d32' : '#c62828'};">
+            ${s.correct ? "✓ Correct" : "✗ Incorrect"}
+          </span>
+          <p><b>Q:</b> ${escapeHTML(s.question)}</p>
+          <div class="meta">Chosen: ${escapeHTML(s.selected)} | Correct: ${escapeHTML(s.correctAnswer)} | ${escapeHTML(s.date)}</div>
+        </div>
+      `).join("")
+    : "<p>No trivia responses submitted yet.</p>";
+
+  openModal("Trivia Scores & Performance Summary", `
+    <div style="background:#f4e6cc; padding:12px; border-radius:8px; border:1px solid #d4be96; margin-bottom:12px; display:flex; justify-content:space-around; text-align:center;">
+      <div>
+        <div style="font-size:1.4em; font-weight:bold; color:#000;">${scores.length}</div>
+        <div style="font-size:0.85em;">Total Submitted</div>
+      </div>
+      <div>
+        <div style="font-size:1.4em; font-weight:bold; color:#2e7d32;">${correct}</div>
+        <div style="font-size:0.85em;">Correct Answers</div>
+      </div>
+      <div>
+        <div style="font-size:1.4em; font-weight:bold; color:#c62828;">${incorrect}</div>
+        <div style="font-size:0.85em;">Incorrect Answers</div>
+      </div>
+    </div>
+    ${content}
+  `, `<button class="danger" onclick="clearScores()">Clear Scores</button>`);
+}
+
+function clearScores() {
+  if (!confirm("Clear trivia scores?")) return;
+  writeStorage(SCORE_KEY, []);
+  showResults();
+}
+
+function showAbout() {
+  document.getElementById("menu").classList.remove("open");
+  openModal("About This Bulletin Board", `
+    <p><b>Social Studies Month Digital Bulletin Board</b></p>
+    <p>Theme: <i>"Pagpapaunlad sa ating Kultura: Pagbabalik Tanaw sa Historya"</i></p>
+    <ul>
+      <li><strong>Announcements:</strong> Important updates.</li>
+      <li><strong>Weekly Activity:</strong> Classroom tasks and guidance.</li>
+      <li><strong>Trivia:</strong> Interactive questions with instant visual feedback (Green for Correct, Red for Incorrect).</li>
+    </ul>
+  `);
+}
+
+loadBg();
+renderBoard();
+</script>
+
+</body>
+</html>
